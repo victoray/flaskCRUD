@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for, flash, get_flashed_messages, render_template
+from flask import Flask, request, redirect, url_for, flash, get_flashed_messages, render_template, jsonify
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 
@@ -128,6 +128,20 @@ def deleteMenuItem(restaurant_id, menu_id):
     close(session)
     return render_template('deletemenuitem.html', restaurant_id=restaurant_id, menu_id=menu_id, item=menuitem)
 
+@app.route('/restaurants/<int:restaurant_id>/menu/JSON')
+def restaurantMenuJSON(restaurant_id):
+    session = start()
+    restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
+    items = session.query(MenuItem).filter_by(restaurant_id=restaurant_id).all()
+    close(session)
+    return jsonify(MenuItems=[i.serialize for i in items])
+
+@app.route('/restaurants/<int:restaurant_id>/menu/<int:menu_id>/JSON')
+def menuJSON(restaurant_id, menu_id):
+    session = start()
+    menuitem = session.query(MenuItem).filter(MenuItem.id == menu_id).one()
+    close(session)
+    return jsonify(Menu=menuitem.serialize)
 
 if __name__ == '__main__':
     app.secret_key = 'key'
